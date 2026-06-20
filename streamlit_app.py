@@ -10,9 +10,9 @@ st.set_page_config(page_title="Simulador de Refração", layout="wide")
 # ==========================================
 with st.sidebar:
     G = st.sidebar.radio("Geometria [m]:", [15, 30], horizontal=True)
-    R = st.slider("Raio da Esfera [R,μm]", min_value=100, max_value=1000, value=1000, step=1)
-    I = st.slider("Índice de refração [I,escalar]", min_value=1.0, max_value=1.8, value=1.5, step=0.01)
-    A_seg = st.slider("Inclinação da tinta [graus]", min_value=0.0, max_value=45.0, value=0.0, step=0.1)
+    R = st.slider("Raio da Esfera [R,μm]", min_value=50, max_value=2000, value=1000, step=1)
+    I = st.slider("Índice de refração [I,escalar]", min_value=1.4, max_value=2.5, value=1.5, step=0.01)
+    A_seg = st.slider("Inclinação da tinta [graus]", min_value=0.0, max_value=60.0, value=0.0, step=0.1)
     Anc = st.slider("Ancoragem [porcentagem]", min_value=40.0, max_value=70.0, value=50.0, step=1.0)
     T1 = st.slider("Ponto de contato 1 [P1,radianos]", min_value=0.0, max_value=float(np.pi / 2), value=0.78, step=0.01)
     T2 = st.slider("Ponto de contato 2 [P2,radianos]", min_value=0.0, max_value=float(np.pi / 2), value=0.50, step=0.01)
@@ -60,20 +60,29 @@ theta_N = np.arctan2(ny, nx)  # ---Ângulo do vetor normal da tinta
 theta_C = np.arccos(np.clip(d_offset / R, -1.0, 1.0))  # ---Abertura angular da área exposta (com trava de proteção)
 theta_zero = theta_N - theta_C  # ---Ponto de interseção mais à direita
 
-# ---3. Pontos P1 e P2 na superfície (Baseados no novo ponto zero)
-T1_calc = theta_zero + T1  # ---Soma o valor do controle a partir da interseção
+# ---3 e 4. Vetores de Incidência e Mapeamento da Área Máxima da Esfera
+X_O = float(G) * 10 ** 6
+Y_O = 0.65 * 10 ** 6
+A_rad_common = np.arctan2(Y_O, X_O)
+length = (3 / 4) * R
+
+# Identificando o limite máximo de área permitida na esfera
+theta_tangente = A_rad_common + (np.pi / 2)       # Ponto onde o raio passa raspando no topo
+theta_tinta_max = theta_N + theta_C               # O outro lado da interseção com a tinta
+theta_max_permitido = min(theta_tangente, theta_tinta_max)
+
+# Fator de escala: mapeia o slider [0 até pi/2] para a área real disponível [theta_zero até theta_max]
+faixa_disponivel = max(0.0, theta_max_permitido - theta_zero)
+fator_escala = faixa_disponivel / (np.pi / 2)
+
+# Pontos P1 e P2 na superfície
+T1_calc = theta_zero + (T1 * fator_escala)
 px1 = R * np.cos(T1_calc)
 py1 = R * np.sin(T1_calc)
 
-T2_calc = theta_zero + T2  # ---Soma o valor do controle a partir da interseção
+T2_calc = theta_zero + (T2 * fator_escala)
 px2 = R * np.cos(T2_calc)
 py2 = R * np.sin(T2_calc)
-
-# ---4. Vetores de Incidência (Paralelos ao vetor Olho -> Centro da Esfera)
-X_O = 15.0 * 10 ** 6
-Y_O = 0.7 * 10 ** 6
-A_rad_common = np.arctan2(Y_O, X_O)
-length = (3 / 4) * R
 
 vx1 = [px1 + length * np.cos(A_rad_common), px1]
 vy1 = [py1 + length * np.sin(A_rad_common), py1]
@@ -144,7 +153,7 @@ sx2 = rx2 + length * np.cos(ang_out2)
 sy2 = ry2 + length * np.sin(ang_out2)
 
 #---7. Cálculo da Densidade de Luz na Tela de 15m
-R_15 = 15.0 * 10**6                                 #---Raio de 15m convertido para μm
+R_15 = float(G) * 10**6                                 #---Raio de 15m convertido para μm
 L_arco_um = L_arco_cm * 10**4                       #---Converte cm para μm (1 cm = 10,000 μm)
 
 #---Posição do olho a 1.2m de altura no círculo de 15m
@@ -401,12 +410,12 @@ st.plotly_chart(fig, use_container_width=True)
 # ==========================================
 # SEGUNDO GRÁFICO (Macro Escala - 15m)
 # ==========================================
-st.title("Projeção da Luz a 15 metros")
+st.title(f"Projeção da Luz a {G} metros")
 
 fig2 = go.Figure()
 
-#---Recalculando as interseções a 15m para plotagem segura
-R_15 = 15.0 * 10**6
+#---Recalculando as interseções macro para plotagem segura
+R_15 = float(G) * 10**6
 
 # Interseção Raio 1 com a distância de 15m
 dot1 = rx1 * np.cos(ang_out1) + ry1 * np.sin(ang_out1)
@@ -420,17 +429,24 @@ t2 = -dot2 + np.sqrt(dot2**2 - (rx2**2 + ry2**2 - R_15**2))
 X_int2 = rx2 + t2 * np.cos(ang_out2)
 Y_int2 = ry2 + t2 * np.sin(ang_out2)
 
-#---Adiciona o Raio de Saída 1 (Estendido até 15m)
-fig2.add_trace(go.Scatter(
-    x=[rx1, X_int1], y=[ry1, Y_int1],
-    mode='lines', name='Vetor de Saída 1 (Macro)', line=dict(color='firebrick', width=3)
-))
+#---Verificação física: O raio reflete para fora do vidro ou fica preso na tinta?
+# Um ponto está exposto se o produto escalar com a normal da tinta for >= ao deslocamento da tinta
+raio1_livre = (rx1 * nx + ry1 * ny) >= d_offset
+raio2_livre = (rx2 * nx + ry2 * ny) >= d_offset
 
-#---Adiciona o Raio de Saída 2 (Estendido até 15m)
-fig2.add_trace(go.Scatter(
-    x=[rx2, X_int2], y=[ry2, Y_int2],
-    mode='lines', name='Vetor de Saída 2 (Macro)', line=dict(color='orange', width=3)
-))
+if raio1_livre:
+    #---Adiciona o Raio de Saída 1 (Estendido até 15m)
+    fig2.add_trace(go.Scatter(
+        x=[rx1, X_int1], y=[ry1, Y_int1],
+        mode='lines', name='Vetor de Saída 1 (Macro)', line=dict(color='firebrick', width=3)
+    ))
+
+if raio2_livre:
+    #---Adiciona o Raio de Saída 2 (Estendido até 15m)
+    fig2.add_trace(go.Scatter(
+        x=[rx2, X_int2], y=[ry2, Y_int2],
+        mode='lines', name='Vetor de Saída 2 (Macro)', line=dict(color='orange', width=3)
+    ))
 
 #---Adiciona o Arco de 15m (Linha rosa no seu esboço)
 # Desenhando o arco do chão (y=0) até uma altura de 2m para cobrir a área de visão
@@ -440,7 +456,7 @@ y_macro_arc = R_15 * np.sin(theta_macro)
 
 fig2.add_trace(go.Scatter(
     x=x_macro_arc, y=y_macro_arc,
-    mode='lines', name='Plano de Recepção (15m)', line=dict(color='magenta', width=4)
+    mode='lines', name='Plano de Recepção ({G}m)', line=dict(color='magenta', width=4)
 ))
 
 #---Adiciona o Arco do Olho (Marrom, centralizado em 1.2m, plotado por cima do rosa)
@@ -464,30 +480,32 @@ mid_macro_x2 = (rx2 + X_int2) / 2
 mid_macro_y2 = (ry2 + Y_int2) / 2
 
 #---Seta do Saída 1 Macro (Vermelho)
-fig2.add_annotation(
-    x=mid_macro_x1, y=mid_macro_y1,                               #---Cabeça da seta no meio do vetor
-    ax=rx1, ay=ry1,                                               #---Cauda presa na origem (R1)
-    xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=3,    #---Mesmos parâmetros visuais do gráfico micro!
-    arrowcolor='firebrick'
-)
+if raio1_livre:
+    fig2.add_annotation(
+        x=mid_macro_x1, y=mid_macro_y1,                               #---Cabeça da seta no meio do vetor
+        ax=rx1, ay=ry1,                                               #---Cauda presa na origem (R1)
+        xref='x', yref='y', axref='x', ayref='y',
+        showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=3,
+        arrowcolor='firebrick'
+    )
 
 #---Seta do Saída 2 Macro (Laranja)
-fig2.add_annotation(
-    x=mid_macro_x2, y=mid_macro_y2,                               #---Cabeça da seta no meio do vetor
-    ax=rx2, ay=ry2,                                               #---Cauda presa na origem (R2)
-    xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=3,    #---Mesmos parâmetros visuais do gráfico micro!
-    arrowcolor='orange'
-)
+if raio2_livre:
+    fig2.add_annotation(
+        x=mid_macro_x2, y=mid_macro_y2,                               #---Cabeça da seta no meio do vetor
+        ax=rx2, ay=ry2,                                               #---Cauda presa na origem (R2)
+        xref='x', yref='y', axref='x', ayref='y',
+        showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=3,
+        arrowcolor='orange'
+    )
 
 #---Configurações do gráfico macro (Travando proporção e formatando eixos)
 fig2.update_layout(
     xaxis=dict(
-        range=[-0.5 * 10**6, 16 * 10**6],           #---Margem para ver a origem e o arco claramente
+        range=[-0.5 * 10**6, (float(G) + 1.0) * 10**6], #---Margem adaptável (16m ou 31m)
         title="Distância",
-        tickvals=[0, 15 * 10**6],                   #---Força exibir apenas 0 e 15m
-        ticktext=['0', '15m'],
+        tickvals=[0, float(G) * 10**6],                 #---Força exibir apenas 0 e o valor de G
+        ticktext=['0', f'{G}m'],                        #---Texto dinâmico na legenda
         showgrid=True, gridcolor='rgba(200, 200, 200, 0.4)', zeroline=False
     ),
     yaxis=dict(

@@ -276,9 +276,12 @@ with st.sidebar:
     st.divider()
 
 # ==========================================
-# CHAMADA ÚNICA DA FÍSICA (tudo calculado aqui, uma vez só)
+# CHAMADA DA FÍSICA (Cálculo da Esfera Variável e da Modelo)
 # ==========================================
 res = calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm)
+
+#---Calcula a esfera modelo (constante 2000 μm) herdando os mesmos ângulos e ancoragem
+res_modelo = calcular_esfera(G, 2000, I, A_seg, Anc, T1, T2, L_arco_cm) 
 
 #---Atualiza o painel com os 2 resultados
 resultado_luz.markdown(
@@ -294,7 +297,12 @@ resultado_luz.markdown(
 #---Inicializa o gráfico iterativo
 fig = go.Figure()
 
-#---Adiciona a Esfera
+#---Adiciona a Esfera Modelo (Referência 2000μm - Tracejada e Cinza)
+fig.add_trace(go.Scatter(x=res_modelo['x_circle'], y=res_modelo['y_circle'], mode='lines', name='Esfera Modelo (2000μm)', line=dict(color='rgba(150, 150, 150, 0.6)', width=2, dash='dash')))
+fig.add_trace(go.Scatter(x=res_modelo['x_seg'], y=res_modelo['y_seg'], mode='lines', name='Tinta Modelo', line=dict(color='rgba(150, 150, 150, 0.6)', width=2, dash='dash')))
+fig.add_trace(go.Scatter(x=res_modelo['x_asfalto'], y=res_modelo['y_asfalto'], mode='lines', name='Asfalto Modelo', line=dict(color='rgba(150, 150, 150, 0.6)', width=2, dash='dash')))
+
+#---Adiciona a Esfera Principal (Variável do Usuário)
 fig.add_trace(go.Scatter(x=res['x_circle'], y=res['y_circle'], mode='lines', name='Esfera', line=dict(color='royalblue', width=2)))
 
 #---Adiciona o Segmento de Reta Central
@@ -443,10 +451,10 @@ fig.add_annotation(
     arrowcolor='orange'
 )
 
-#---Configurações de proporção, limites travados em 1300 e grade quadriculada
+#---Configurações de proporção, limites travados para a esfera modelo (2500) e grade quadriculada
 fig.update_layout(
     xaxis=dict(
-        range=[-1300, 1300],
+        range=[-2500, 2500],
         title="X (μm)",
         dtick=500,                              #---Espaçamento da grade de 500 em 500
         showgrid=True,                          #---Ativa as linhas quadriculadas
@@ -455,7 +463,7 @@ fig.update_layout(
         showline=False                          #---Remove as linhas de contorno do gráfico
     ),
     yaxis=dict(
-        range=[-1300, 1300],
+        range=[-2500, 2500],
         title="Y (μm)",
         scaleanchor="x",
         scaleratio=1,

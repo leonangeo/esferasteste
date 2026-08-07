@@ -280,8 +280,8 @@ with st.sidebar:
 # ==========================================
 res = calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm)
 
-#---Calcula a esfera modelo (constante 2000 μm) herdando os mesmos ângulos e ancoragem
-res_modelo = calcular_esfera(G, 2000, I, A_seg, Anc, T1, T2, L_arco_cm) 
+#---Calcula a esfera modelo (constante 2000 μm) com varredura MÁXIMA (T1=0.0 e T2=pi/2)
+res_modelo = calcular_esfera(G, 2000, I, A_seg, Anc, 0.0, float(np.pi / 2), L_arco_cm)
 
 #---Atualiza o painel com os 2 resultados
 resultado_luz.markdown(
@@ -297,10 +297,51 @@ resultado_luz.markdown(
 #---Inicializa o gráfico iterativo
 fig = go.Figure()
 
-#---Adiciona a Esfera Modelo (Referência 2000μm - Tracejada e Cinza)
-fig.add_trace(go.Scatter(x=res_modelo['x_circle'], y=res_modelo['y_circle'], mode='lines', name='Esfera Modelo (2000μm)', line=dict(color='rgba(150, 150, 150, 0.6)', width=2, dash='dash')))
-fig.add_trace(go.Scatter(x=res_modelo['x_seg'], y=res_modelo['y_seg'], mode='lines', name='Tinta Modelo', line=dict(color='rgba(150, 150, 150, 0.6)', width=2, dash='dash')))
-fig.add_trace(go.Scatter(x=res_modelo['x_asfalto'], y=res_modelo['y_asfalto'], mode='lines', name='Asfalto Modelo', line=dict(color='rgba(150, 150, 150, 0.6)', width=2, dash='dash')))
+#---Adiciona a Esfera Modelo e seus Caminhos de Luz (Tracejados e Cinza)
+cor_modelo = 'rgba(150, 150, 150, 0.6)'
+fig.add_trace(go.Scatter(x=res_modelo['x_circle'], y=res_modelo['y_circle'], mode='lines', name='Esfera Modelo (2000μm)', line=dict(color=cor_modelo, width=2, dash='dash')))
+fig.add_trace(go.Scatter(x=res_modelo['x_seg'], y=res_modelo['y_seg'], mode='lines', name='Tinta Modelo', line=dict(color=cor_modelo, width=2, dash='dash')))
+fig.add_trace(go.Scatter(x=res_modelo['x_asfalto'], y=res_modelo['y_asfalto'], mode='lines', name='Asfalto Modelo', line=dict(color=cor_modelo, width=2, dash='dash')))
+
+# Raios Incidentes Modelo
+fig.add_trace(go.Scatter(x=res_modelo['vx1'], y=res_modelo['vy1'], mode='lines', name='Luz Modelo (Limites)', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz'))
+fig.add_trace(go.Scatter(x=res_modelo['vx2'], y=res_modelo['vy2'], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+
+# Raios Refratados Modelo
+fig.add_trace(go.Scatter(x=[res_modelo['px1'], res_modelo['qx1']], y=[res_modelo['py1'], res_modelo['qy1']], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+fig.add_trace(go.Scatter(x=[res_modelo['px2'], res_modelo['qx2']], y=[res_modelo['py2'], res_modelo['qy2']], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+
+# Raios Refletidos Modelo
+fig.add_trace(go.Scatter(x=[res_modelo['qx1'], res_modelo['rx1']], y=[res_modelo['qy1'], res_modelo['ry1']], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+fig.add_trace(go.Scatter(x=[res_modelo['qx2'], res_modelo['rx2']], y=[res_modelo['qy2'], res_modelo['ry2']], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+
+# Raios de Saída Modelo
+fig.add_trace(go.Scatter(x=[res_modelo['rx1'], res_modelo['sx1']], y=[res_modelo['ry1'], res_modelo['sy1']], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+fig.add_trace(go.Scatter(x=[res_modelo['rx2'], res_modelo['sx2']], y=[res_modelo['ry2'], res_modelo['sy2']], mode='lines', line=dict(color=cor_modelo, width=2, dash='dash'), legendgroup='modelo_luz', showlegend=False))
+
+# Setas dos Incidentes Modelo
+fig.add_annotation(
+    x=(res_modelo['vx1'][0] + res_modelo['vx1'][1]) / 2, y=(res_modelo['vy1'][0] + res_modelo['vy1'][1]) / 2,
+    ax=res_modelo['vx1'][0], ay=res_modelo['vy1'][0], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=2, arrowcolor='gray'
+)
+fig.add_annotation(
+    x=(res_modelo['vx2'][0] + res_modelo['vx2'][1]) / 2, y=(res_modelo['vy2'][0] + res_modelo['vy2'][1]) / 2,
+    ax=res_modelo['vx2'][0], ay=res_modelo['vy2'][0], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=2, arrowcolor='gray'
+)
+
+# Setas de Saída Modelo (Apontando para fora, no meio do vetor S)
+fig.add_annotation(
+    x=(res_modelo['rx1'] + res_modelo['sx1']) / 2, y=(res_modelo['ry1'] + res_modelo['sy1']) / 2,
+    ax=res_modelo['rx1'], ay=res_modelo['ry1'], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=2, arrowcolor='gray'
+)
+fig.add_annotation(
+    x=(res_modelo['rx2'] + res_modelo['sx2']) / 2, y=(res_modelo['ry2'] + res_modelo['sy2']) / 2,
+    ax=res_modelo['rx2'], ay=res_modelo['ry2'], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=2, arrowcolor='gray'
+)
 
 #---Adiciona a Esfera Principal (Variável do Usuário)
 fig.add_trace(go.Scatter(x=res['x_circle'], y=res['y_circle'], mode='lines', name='Esfera', line=dict(color='royalblue', width=2)))
@@ -488,7 +529,35 @@ st.title(f"Projeção da Luz a {G} metros")
 
 fig2 = go.Figure()
 
-#---Seta do Raio de Saída 1 (Estendido até D=G, se estiver livre)
+#---Raios de Saída MÁXIMOS da Esfera Modelo (Cinza, Tracejados e semi-transparentes)
+# Desenhados incondicionalmente (sem IF de raio_livre) para expor o cone matemático absoluto
+cor_modelo_macro = 'rgba(150, 150, 150, 0.6)'
+
+fig2.add_trace(go.Scatter(
+    x=[res_modelo['rx1'], res_modelo['X_int1']], y=[res_modelo['ry1'], res_modelo['Y_int1']],
+    mode='lines', name='Limite R1 (Modelo)', line=dict(color=cor_modelo_macro, width=2, dash='dash')
+))
+# Seta do Saída 1 Macro Modelo
+fig2.add_annotation(
+    x=(res_modelo['rx1'] + res_modelo['X_int1']) / 2, y=(res_modelo['ry1'] + res_modelo['Y_int1']) / 2,
+    ax=res_modelo['rx1'], ay=res_modelo['ry1'], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=2, arrowcolor='gray'
+)
+
+fig2.add_trace(go.Scatter(
+    x=[res_modelo['rx2'], res_modelo['X_int2']], y=[res_modelo['ry2'], res_modelo['Y_int2']],
+    mode='lines', name='Limite R2 (Modelo)', line=dict(color=cor_modelo_macro, width=2, dash='dash')
+))
+# Seta do Saída 2 Macro Modelo
+fig2.add_annotation(
+    x=(res_modelo['rx2'] + res_modelo['X_int2']) / 2, y=(res_modelo['ry2'] + res_modelo['Y_int2']) / 2,
+    ax=res_modelo['rx2'], ay=res_modelo['ry2'], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=2, arrowsize=0.75, arrowwidth=2, arrowcolor='gray'
+)
+
+#---Seta do Raio de Saída 1 (Usuário) (Estendido até D=G, se estiver livre)
+
+#---Seta do Raio de Saída 1 (Usuário) (Estendido até D=G, se estiver livre)
 if res['raio1_livre']:
     fig2.add_trace(go.Scatter(
         x=[res['rx1'], res['X_int1']], y=[res['ry1'], res['Y_int1']],

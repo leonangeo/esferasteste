@@ -1,5 +1,13 @@
 # Guia do Projeto: Versionamento e Deploy
 
+## 0. Requisitos
+Instalar Python, Git, Vscode.
+Criar conta no Github, e baixar aplicativo github (windows, mac, linux).
+Login no Github local.
+Ver tutoriais se necessário, é fácil.
+* **Teste** Crie uma pasta chamada 'PROJETO' na área de trabalho -> Botão direito do mouse -> Abrir no terminal -> Digite 'python --version' e tecle enter (deve mostrar a versão instalada do python) -> Digite 'python' (deve mudar o terminal, com duas setas >> quer dizer que está rodando python) -> Digite 'print("ooi")' e tecle enter (deve responder ooi, se sim tudo certo).
+* **Se o teste falhou** pesquise como instalar e rodar python.
+
 ## 1. Conceitos Básicos (Visão Geral)
 * **Git:** Ferramenta que salva o histórico do código. Funciona como um "desfazer/ctrl+Z" que você pode voltar em qualquer ponto anterior.
 * **GitHub:** Plataforma em nuvem que guarda o histórico do Git para acesso remoto.

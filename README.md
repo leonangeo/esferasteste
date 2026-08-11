@@ -163,3 +163,8 @@ git push
 ```
 
 **Pronto!** Após o `git push`, o Streamlit detectará a mudança no GitHub e atualizará a aplicação em produção automaticamente, seguindo o mesmo fluxo já configurado.
+
+4. Para puxar as alterações mais recentes do online e baixar no computador local:
+```bash
+git pull
+```

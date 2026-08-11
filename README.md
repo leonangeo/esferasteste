@@ -114,3 +114,52 @@ git remote add origin <URL_DO_SEU_REPOSITORIO_NO_GITHUB>
 git push -u origin main
 ```
 Após o `git push`, o Streamlit detecta a alteração no GitHub, lê o `requirements.txt` e atualiza a aplicação no ar de forma 100% automática.
+
+## 7. Como Continuar o Projeto (Para Novos Desenvolvedores)
+
+Se você vai dar continuidade ao projeto, o primeiro passo é baixar o código que já está no GitHub para o seu computador, fazer as alterações e enviá-las de volta.
+
+### Passo 1: Baixar o Projeto (Clone)
+Abra o terminal, navegue até a pasta onde deseja guardar o projeto e execute o comando abaixo para copiar o repositório:
+```bash
+git clone <URL_DO_SEU_REPOSITORIO_NO_GITHUB>
+```
+Em seguida, entre na pasta do projeto que acabou de ser criada (substitua pelo nome real da pasta):
+```bash
+cd <NOME_DA_PASTA_DO_PROJETO>
+```
+
+### Passo 2: Preparar o Ambiente
+Crie e ative o ambiente virtual para instalar as bibliotecas que o projeto já utiliza:
+```bash
+python -m venv venv
+source venv/bin/activate  # No Windows use: venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+### Passo 3: Fazer as Alterações
+Abra o arquivo `main.py` no seu editor, faça as mudanças necessárias e salve. Exemplo de nova adição:
+```python
+# Código existente acima...
+st.write("Nova funcionalidade adicionada pelo novo desenvolvedor!")
+```
+
+### Passo 4: Salvar e Subir o Código (Commit e Push)
+Com as alterações feitas, registre as mudanças no Git e envie para o GitHub:
+
+1. Prepare os arquivos modificados:
+```bash
+git add .
+```
+
+2. Crie o ponto de salvamento com uma mensagem descritiva:
+```bash
+git commit -m "feat: adiciona nova mensagem na tela principal"
+```
+
+3. Envie as alterações para o repositório online:
+```bash
+git push
+```
+
+**Pronto!** Após o `git push`, o Streamlit detectará a mudança no GitHub e atualizará a aplicação em produção automaticamente, seguindo o mesmo fluxo já configurado.

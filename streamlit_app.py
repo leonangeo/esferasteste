@@ -9,7 +9,7 @@ import numpy as np                      #---lib geral de matemática básica
 import plotly.graph_objects as go       #---lib de plot de gráficos
 
 #---Configuração da página para usar a largura total e definir o título da aba
-st.set_page_config(page_title="Simulador de Refração", layout="wide")
+st.set_page_config(page_title="Simulador de Refração RENOMEADO123", layout="wide")
 
 
 # ==========================================

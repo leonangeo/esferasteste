@@ -9,7 +9,7 @@ import numpy as np                      #---lib geral de matemática básica
 import plotly.graph_objects as go       #---lib de plot de gráficos
 
 #---Configuração da página para usar a largura total e definir o título da aba
-st.set_page_config(page_title="Simulador de Refração RENOMEADO123 ALTERAÇÃO 2", layout="wide")
+st.set_page_config(page_title="Simulador de Refração", layout="wide")
 
 
 # ==========================================
@@ -259,8 +259,9 @@ def calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm):
 # PAINEL LATERAL (Equivalente aos 25% da esquerda)
 # ==========================================
 with st.sidebar:
+    R_modelo = st.slider("Raio da Esfera Modelo [μm]", min_value=100, max_value=3000, value=2000, step=10)
     G = st.sidebar.radio("Geometria [m]:", [15, 30], horizontal=True)
-    R = st.slider("Raio da Esfera [R,μm]", min_value=50, max_value=2000, value=1000, step=1)
+    R = st.slider("Raio da Esfera [R,μm]", min_value=25, max_value=500, value=250, step=1)
     I = st.slider("Índice de refração [I,escalar]", min_value=1.4, max_value=2.5, value=1.5, step=0.01)
     A_seg = st.slider("Inclinação da tinta [graus]", min_value=0.0, max_value=60.0, value=0.0, step=0.1)
     Anc = st.slider("Ancoragem [porcentagem]", min_value=40.0, max_value=70.0, value=50.0, step=1.0)
@@ -280,8 +281,8 @@ with st.sidebar:
 # ==========================================
 res = calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm)
 
-#---Calcula a esfera modelo (constante 2000 μm) com varredura MÁXIMA (T1=0.0 e T2=pi/2)
-res_modelo = calcular_esfera(G, 2000, I, A_seg, Anc, 0.0, float(np.pi / 2), L_arco_cm)
+#---Calcula a esfera modelo dinamicamente com varredura MÁXIMA (T1=0.0 e T2=pi/2)
+res_modelo = calcular_esfera(G, R_modelo, I, A_seg, Anc, 0.0, float(np.pi / 2), L_arco_cm)
 
 #---Atualiza o painel com os 2 resultados
 resultado_luz.markdown(
@@ -299,7 +300,7 @@ fig = go.Figure()
 
 #---Adiciona a Esfera Modelo e seus Caminhos de Luz (Tracejados e Cinza)
 cor_modelo = 'rgba(150, 150, 150, 0.6)'
-fig.add_trace(go.Scatter(x=res_modelo['x_circle'], y=res_modelo['y_circle'], mode='lines', name='Esfera Modelo (2000μm)', line=dict(color=cor_modelo, width=2, dash='dash')))
+fig.add_trace(go.Scatter(x=res_modelo['x_circle'], y=res_modelo['y_circle'], mode='lines', name=f'Esfera Modelo ({R_modelo}μm)', line=dict(color=cor_modelo, width=2, dash='dash')))
 fig.add_trace(go.Scatter(x=res_modelo['x_seg'], y=res_modelo['y_seg'], mode='lines', name='Tinta Modelo', line=dict(color=cor_modelo, width=2, dash='dash')))
 fig.add_trace(go.Scatter(x=res_modelo['x_asfalto'], y=res_modelo['y_asfalto'], mode='lines', name='Asfalto Modelo', line=dict(color=cor_modelo, width=2, dash='dash')))
 
@@ -492,23 +493,24 @@ fig.add_annotation(
     arrowcolor='orange'
 )
 
-#---Configurações de proporção, limites travados para a esfera modelo (2500) e grade quadriculada
+#---Configurações de proporção, limites dinâmicos para a esfera modelo e grade quadriculada
+limite_zoom = 1.25 * R_modelo
 fig.update_layout(
     xaxis=dict(
-        range=[-2500, 2500],
+        range=[-limite_zoom, limite_zoom],
         title="X (μm)",
-        dtick=500,                              #---Espaçamento da grade de 500 em 500
+        dtick=500,                              #---Espaçamento da grade
         showgrid=True,                          #---Ativa as linhas quadriculadas
         gridcolor='rgba(200, 200, 200, 0.5)',   #---Cor da malha (cinza suave)
         zeroline=False,                         #---Remove a linha forte central do eixo 0
         showline=False                          #---Remove as linhas de contorno do gráfico
     ),
     yaxis=dict(
-        range=[-2500, 2500],
+        range=[-limite_zoom, limite_zoom],
         title="Y (μm)",
         scaleanchor="x",
         scaleratio=1,
-        dtick=500,                              #---Espaçamento da grade de 500 em 500
+        dtick=500,                              #---Espaçamento da grade
         showgrid=True,                          #---Ativa as linhas quadriculadas
         gridcolor='rgba(200, 200, 200, 0.5)',   #---Cor da malha (cinza suave)
         zeroline=False,                         #---Remove a linha forte central do eixo 0

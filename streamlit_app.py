@@ -224,6 +224,15 @@ def calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm):
     x_olho_arc = R_15 * np.cos(theta_olho)
     y_olho_arc = R_15 * np.sin(theta_olho)
 
+    #---Cálculo do Arco de Entrada (Ângulo em graus entre os pontos P1 e P2 a partir do centro)
+    arco_entrada_graus = np.degrees(abs(T1_calc - T2_calc))
+    
+    #---Cálculo do Arco de Saída (Ângulo em graus entre os pontos R1 e R2 a partir do centro)
+    arco_saida_graus = np.degrees(abs(TR1 - TR2))
+    
+    #---Cálculo do Arco de Chegada (Ângulo em graus da abertura da luz ao atingir a distância G)
+    arco_chegada_graus = np.degrees(abs(theta_int1 - theta_int2))
+
     #---Tudo que os gráficos (micro e macro) precisam para desenhar, num único dicionário
     return dict(
         # Geometria da esfera / tinta / asfalto
@@ -252,6 +261,9 @@ def calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm):
         x_olho_arc=x_olho_arc, y_olho_arc=y_olho_arc,
         # Métrica de luz
         densidade=densidade,
+        arco_entrada_graus=arco_entrada_graus,
+        arco_saida_graus=arco_saida_graus,
+        arco_chegada_graus=arco_chegada_graus,
     )
 
 
@@ -276,8 +288,7 @@ with st.sidebar:
     st.divider()
 
     st.markdown("<h3 style='text-align: center;'>Resultados</h3>", unsafe_allow_html=True)
-    st.markdown(f"**Raio atual da esfera:** {R} μm")
-    resultado_luz = st.empty()  # ---Espaço reservado para a porcentagem de luz
+    resultado_luz = st.empty()  # ---Espaço reservado para os resultados
     st.divider()
 
 # ==========================================
@@ -288,17 +299,19 @@ res = calcular_esfera(G, R, I, A_seg, Anc, T1, T2, L_arco_cm)
 #---Calcula a esfera modelo dinamicamente com varredura MÁXIMA (T1=0.0 e T2=pi/2)
 res_modelo = calcular_esfera(G, R_modelo, I, A_seg, Anc, 0.0, float(np.pi / 2), L_arco_cm)
 
-#---Atualiza o painel com os 2 resultados
+#---Atualiza o painel com os resultados
+#---Atualiza o painel com os resultados
 resultado_luz.markdown(
-    f"**Luz transmitida total:** {res['T_total_perc']:.1f}% do original<br>"
-    f"**Densidade de luz:** {res['densidade']:.4f}",
+    f"**Arco de entrada:** {res['arco_entrada_graus']:.1f}°<br>"
+    f"**Arco de saída:** {res['arco_saida_graus']:.1f}°<br>"
+    f"**Arco de chegada aos {G} metros:** {res['arco_chegada_graus']:.2f}°",
     unsafe_allow_html=True
 )
 
 # ==========================================
 # ÁREA PRINCIPAL (Gráfico)
 # ==========================================
-
+st.title(f"Interação da luz em escala micro")
 #---Inicializa o gráfico iterativo
 fig = go.Figure()
 

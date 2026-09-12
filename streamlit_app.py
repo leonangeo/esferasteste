@@ -545,7 +545,7 @@ st.plotly_chart(fig, use_container_width=True)
 # ==========================================
 # SEGUNDO GRÁFICO (Macro Escala - G metros)
 # ==========================================
-st.title(f"Projeção da Luz a {G} metros")
+st.title(f"Projeção da luz a {G} metros")
 
 fig2 = go.Figure()
 
@@ -638,11 +638,10 @@ fig2.update_layout(
         showgrid=True, gridcolor='rgba(200, 200, 200, 0.4)', zeroline=False
     ),
     yaxis=dict(
-        range=[-0.2 * 10 ** 6, 2 * 10 ** 6],        #---Foco na altura, cobrindo o 1.2m
-        scaleanchor="x", scaleratio=1,              #---MUITO IMPORTANTE: Trava a proporção real dos ângulos!
+        range=[0, 2.05 * 10 ** 6],                  
         title="Altura",
-        tickvals=[0, 1.2 * 10 ** 6],                #---Força exibir apenas 0 e 1.2m
-        ticktext=['0', '1.2m'],
+        tickvals=[1.1 * 10 ** 6, 1.2 * 10 ** 6, 1.3 * 10 ** 6, 2.0 * 10 ** 6],
+        ticktext=['1.1m', '1.2m (Olho)', '1.3m', '2.0m'],
         showgrid=True, gridcolor='rgba(200, 200, 200, 0.4)', zeroline=False
     ),
     height=350,                                     #---Formato retangular mais achatado (estilo 'caixa verde')
